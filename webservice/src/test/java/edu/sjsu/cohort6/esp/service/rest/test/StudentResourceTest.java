@@ -11,7 +11,7 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  */
-//Testing comment changes bored now
+//Testing comment bored now
 package edu.sjsu.cohort6.esp.service.rest.test;
 
 import edu.sjsu.cohort6.esp.common.CommonUtils;
