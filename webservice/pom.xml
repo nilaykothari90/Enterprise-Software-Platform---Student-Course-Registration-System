@@ -24,7 +24,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <dropwizard.version>0.8.2</dropwizard.version>
+        <dropwizard.version>0.8.4</dropwizard.version>
     </properties>
 
     <dependencies>
@@ -39,11 +39,32 @@
             <artifactId>dropwizard-core</artifactId>
             <version>${dropwizard.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-assets</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-auth</artifactId>
+            <version>${dropwizard.version}</version>
+        </dependency>
 
+        <dependency>
+            <groupId>edu.sjsu.cohort6.esp</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>edu.sjsu.cohort6.esp</groupId>
             <artifactId>database</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.sjsu.cohort6.esp</groupId>
+            <artifactId>database-tests</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -68,6 +89,19 @@
                         <suiteXmlFile>testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

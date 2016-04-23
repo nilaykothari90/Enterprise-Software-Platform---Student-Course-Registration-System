@@ -14,105 +14,64 @@
 
 package edu.sjsu.cohort6.esp.common;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PrePersist;
+import org.mongodb.morphia.annotations.Reference;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Student entity.
- *
+ * <p>
+ * Student document will have a user entity reference.
+ * Student document may have one or more course references.
+ * <p>
  * Some annotations are per morphia and some per dropwizard frameworks.
  * This POJO will be used across DB, Web service and UI.
- *
+ * <p>
  * {
-     "_id" : ObjectId("55f6f9fcd3fde80ee829ef4c"),
-     "className" : "edu.sjsu.cohort6.esp.common.Student",
-     "firstName" : "Watsh",
-     "lastName" : "test",
-     "emailId" : "watsh.rajneesh@sjsu.edu",
-     "passwordHash" : "5f4dcc3b5aa765d61d8327deb882cf99",
-     "lastUpdated" : ISODate("2015-09-14T16:46:52.352Z"),
-     "courseRefs" : [ ]
- }
+ * "_id" : ObjectId("5603cf1ed3fde88bbc372003"),
+ * "className" : "edu.sjsu.cohort6.esp.common.Student",
+ * "user" : DBRef("user", ObjectId("5603cf1ed3fde88bbc372002")),
+ * "lastUpdated" : ISODate("2015-09-24T10:23:26.128Z")
+ * }
  *
  * @author rwatsh
  */
-@Entity("student")
-@Indexes(
-        @Index(value = "emailId", fields = @Field("emailId"))
-)
-@JsonIgnoreProperties({"_id"})
-public class Student {
+@Entity(value = "students" , noClassnameStored = true, concern = "SAFE")
+public class Student extends BaseModel {
     @Id
-    private ObjectId _id;
-    @Transient
-    private String id;
-    private String firstName;
-    private String lastName;
-    @Indexed(name="emailId", unique=true,dropDups=true)
-    private String emailId;
-    private String passwordHash;
+    private String id = new ObjectId().toHexString();
+
+    @Reference
+    private User user;
+
     @Reference
     private List<Course> courseRefs;
 
     Date lastUpdated = new Date();
 
-    @PrePersist void prePersist() {lastUpdated = new Date();}
+    @PrePersist
+    void prePersist() {
+        lastUpdated = new Date();
+    }
 
-    public Student(String firstName, String lastName, String emailId, String password) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.emailId = emailId;
-        try {
-            this.passwordHash = generateMD5Hash(password);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to generate password hash");
-        }
+    private static final Logger log = Logger.getLogger(Student.class.getName());
+
+    public Student(User user) {
+        this.user = user;
         this.courseRefs = new ArrayList<>();
     }
 
-    public Student() {}
-
-    private String generateMD5Hash(String plaintext) throws NoSuchAlgorithmException {
-        MessageDigest m = MessageDigest.getInstance("MD5");
-        m.reset();
-        m.update(plaintext.getBytes());
-        byte[] digest = m.digest();
-        BigInteger bigInt = new BigInteger(1, digest);
-        String hashtext = bigInt.toString(16);
-        // Now we need to zero pad it if you actually want the full 32 chars.
-        while (hashtext.length() < 32) {
-            hashtext = "0" + hashtext;
-        }
-        return hashtext;
+    public Student() {
     }
 
-    public ObjectId get_id() {
-        return _id;
-    }
-
-    public void set_id(ObjectId _id) {
-        this._id = _id;
-    }
-
-    @JsonProperty
-    public String getId() {
-        return _id != null ? _id.toHexString() : null;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-        this._id = new ObjectId(id);
-    }
 
     @JsonProperty
     public Date getLastUpdated() {
@@ -123,41 +82,6 @@ public class Student {
         this.lastUpdated = lastUpdated;
     }
 
-    @JsonProperty
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    @JsonProperty
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    @JsonProperty
-    public String getEmailId() {
-        return emailId;
-    }
-
-    public void setEmailId(String emailId) {
-        this.emailId = emailId;
-    }
-
-    @JsonProperty
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
 
     @JsonProperty
     public List<Course> getCourseRefs() {
@@ -168,15 +92,32 @@ public class Student {
         this.courseRefs = courseRefs;
     }
 
+
+    @JsonProperty
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    @JsonProperty
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id != null ? new ObjectId(id).toHexString() : new ObjectId().toHexString();
+    }
+
     @Override
     public String toString() {
         return "Student{" +
-                "id=" + (_id != null ?_id.toHexString() : _id) +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", emailId='" + emailId + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
+                "id=" + id +
+                ", user=" + user +
                 ", courseRefs=" + courseRefs +
+                ", lastUpdated=" + lastUpdated +
                 '}';
     }
 }

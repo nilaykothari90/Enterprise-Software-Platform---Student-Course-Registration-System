@@ -15,10 +15,7 @@
 package edu.sjsu.cohort6.esp.dao;
 
 
-import edu.sjsu.cohort6.esp.common.Course;
-import edu.sjsu.cohort6.esp.common.Student;
-
-import java.util.List;
+import org.mongodb.morphia.Morphia;
 
 /**
  * A generic DB Client interface.
@@ -26,23 +23,13 @@ import java.util.List;
  * @author rwatsh
  */
 public interface DBClient extends AutoCloseable {
-    // Common
+    // Common operations which don't belong in entities.
     void dropDB(String dbName);
     void useDB(String dbName);
     boolean checkHealth();
     String getConnectString();
 
-
-    // Student
-    List<String> addStudents(List<Student> studentList);
-    long removeStudents(List<String> studentIdsList);
-    void updateStudents(List<Student> studentList);
-    void updateStudents(List<Student> studentList, List<Course> courseList);
-    List<Student> fetchStudents(List<String> studentIdsList);
-
-    // Course
-    List<String> addCourse(List<Course> courseList);
-    long removeCourses(List<String> courseIdsList);
-    void updateCourses(List<Course> courseList);
-    List<Course> fetchCourses(List<String> courseIdsList);
+    // Gets the entity DAO instance.
+    Object getDAO(Class<? extends BaseDAO> clazz);
+    Morphia getMorphia();
 }

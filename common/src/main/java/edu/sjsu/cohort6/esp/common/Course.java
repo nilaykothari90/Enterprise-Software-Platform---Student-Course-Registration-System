@@ -14,53 +14,59 @@
 
 package edu.sjsu.cohort6.esp.common;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.PrePersist;
 
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Course entity.
- *  db.course.find().pretty()
- {
-     "_id" : ObjectId("55f6f4c0d3fde80d8c2592e0"),
-     "className" : "Course",
-     "courseName" : "Cloud Technologies",
-     "instructors" : [
-         "Ahmad Nouri",
-         "Thomas Hildebrand",
-         "Aktouf"
-     ],
-     "startTime" : ISODate("2015-10-10T07:00:00Z"),
-     "endTime" : ISODate("2015-11-10T08:00:00Z"),
-     "availabilityStatus" : 1,
-     "maxCapacity" : 20,
-     "price" : 200,
-     "location" : "Santa Clara, CA",
-     "keywords" : [
-         "Java",
-         "MongoDB",
-         "REST"
-     ],
-     "lastUpdated" : ISODate("2015-09-14T16:24:32.877Z")
- }
+ * db.course.find().pretty()
+ * {
+ * "_id" : ObjectId("5603cf1ed3fde88bbc371fff"),
+ * "className" : "edu.sjsu.cohort6.esp.common.Course",
+ * "courseName" : "Cloud Technologies",
+ * "instructors" : [
+ * "Ahmad Nouri",
+ * "Thomas Hildebrand",
+ * "Aktouf"
+ * ],
+ * "startTime" : ISODate("2015-10-10T17:30:00Z"),
+ * "endTime" : ISODate("2015-11-10T21:00:00Z"),
+ * "availabilityStatus" : 1,
+ * "maxCapacity" : 20,
+ * "price" : 200,
+ * "location" : "Santa Clara, CA",
+ * "keywords" : [
+ * "Java",
+ * "MongoDB",
+ * "REST"
+ * ],
+ * "lastUpdated" : ISODate("2015-09-24T10:23:26.102Z")
+ * }
  *
  * @author rwatsh
  */
-@Entity("course")
-@Indexes(
-        @Index(value = "courseName", fields = @Field("courseName"))
-)
-@JsonIgnoreProperties({"_id"})
-public class Course {
+@Entity(value = "courses" , noClassnameStored = true, concern = "SAFE")
+public class Course extends BaseModel {
+    /**
+     * Note:
+     * It is important to initialize the id with ObjectID hex string to avoid any errors in JSON to DBObject (BSON)
+     * conversion or Java object to JSON response conversion. This is the hard learned way to make this work after
+     * having tried several frameworks like mongojack, katharisis to make morphia and dropwizard work together. This
+     * simple solution to maintain the id as hex string of the object ID works pretty well between jersey, jackson, and
+     * mongodb/morphia frameworks.
+     */
     @Id
-    private ObjectId _id;
-    @Transient
-    private String id;
-    @Indexed(name="courseName", unique=true,dropDups=true)
+    private String id = new ObjectId().toHexString();
+
+    @Indexed(unique = true)
     private String courseName;
     private List<String> instructors;
     private Date startTime;
@@ -76,9 +82,15 @@ public class Course {
 
     Date lastUpdated = new Date();
 
-    @PrePersist void prePersist() {lastUpdated = new Date();}
+    private static final Logger log = Logger.getLogger(Course.class.getName());
 
-    public Course() {}
+    @PrePersist
+    void prePersist() {
+        lastUpdated = new Date();
+    }
+
+    public Course() {
+    }
 
     public static class Builder {
         private String courseName;
@@ -153,24 +165,6 @@ public class Course {
         this.price = b.price;
         this.startTime = b.startTime;
         //this.studentRefs = b.studentRefs;
-    }
-
-    public ObjectId get_id() {
-        return _id;
-    }
-
-    public void set_id(ObjectId id) {
-        this._id = id;
-    }
-
-    @JsonProperty
-    public String getId() {
-        return _id != null ? _id.toHexString() : null;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-        this._id = new ObjectId(id);
     }
 
     @JsonProperty
@@ -263,7 +257,17 @@ public class Course {
         this.keywords = keywords;
     }
 
-    /*public List<Student> getStudentRefs() {
+    @JsonProperty
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id != null ? new ObjectId(id).toHexString() : new ObjectId().toHexString();
+    }
+
+
+/*public List<Student> getStudentRefs() {
         return studentRefs;
     }
 
@@ -274,7 +278,7 @@ public class Course {
     @Override
     public String toString() {
         return "Course{" +
-                "id=" + (_id != null ?_id.toHexString() : _id ) +
+                "id=" + id +
                 ", courseName='" + courseName + '\'' +
                 ", instructors=" + instructors +
                 ", startTime=" + startTime +
@@ -299,5 +303,21 @@ public class Course {
         public int getValue() {
             return value;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Course course = (Course) o;
+
+        return courseName.equals(course.courseName);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return courseName.hashCode();
     }
 }
