@@ -12,7 +12,7 @@
  * all copies or substantial portions of the Software.
  */
 
-//Testing comment boring bla bla bla....
+//Testing comment boring....
 //Testing comment boring but now interesting haha
 
 package edu.sjsu.cohort6.esp.service.rest.test;
